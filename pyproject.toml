@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diffsense-ai"
+version = "0.1.0"
+description = "AI PR Review assistant for GitHub Pull Requests"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+web = ["fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2"]
+dev = ["pytest>=8.3.5", "ruff>=0.4.4"]
+
+[project.scripts]
+diffsense = "app.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
