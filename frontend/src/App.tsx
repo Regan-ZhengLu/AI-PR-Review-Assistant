@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { requestReview } from './api';
+import { formatReviewMarkdown } from './formatReviewMarkdown';
 import { RiskBadge } from './RiskBadge';
 import type { ReviewResult } from './types';
 
@@ -95,6 +96,21 @@ function EmptyState() {
 
 function ReviewResultView({ review }: { review: ReviewResult }) {
   const pr = review.pr;
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const markdown = formatReviewMarkdown(review);
+
+  async function handleCopyMarkdown() {
+    setCopyStatus('idle');
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('当前浏览器不支持剪贴板 API');
+      }
+      await navigator.clipboard.writeText(markdown);
+      setCopyStatus('success');
+    } catch (err) {
+      setCopyStatus('error');
+    }
+  }
 
   return (
     <section className="result-grid">
@@ -104,7 +120,12 @@ function ReviewResultView({ review }: { review: ReviewResult }) {
             <p className="eyebrow">Summary</p>
             <h2>PR 变更总结</h2>
           </div>
-          <RiskBadge level={review.riskLevel} />
+          <div className="summary-actions">
+            <RiskBadge level={review.riskLevel} />
+            <button className="copy-button" type="button" onClick={handleCopyMarkdown}>
+              复制 Review
+            </button>
+          </div>
         </div>
 
         {pr && (
@@ -125,6 +146,8 @@ function ReviewResultView({ review }: { review: ReviewResult }) {
           {review.model && <span>模型：{review.model}</span>}
           {review.confidence && <span>置信度：{review.confidence}</span>}
         </div>
+        {copyStatus === 'success' && <p className="copy-status copy-status--success">已复制 Markdown Review，可直接粘贴到 GitHub PR 评论区。</p>}
+        {copyStatus === 'error' && <p className="copy-status copy-status--error">复制失败，请手动复制下方 Markdown 内容。</p>}
         {review.fallbackReason && <p className="fallback-note">Fallback 原因：{review.fallbackReason}</p>}
       </article>
 
@@ -178,6 +201,19 @@ function ReviewResultView({ review }: { review: ReviewResult }) {
         ) : (
           <p className="empty-copy">暂无额外建议。</p>
         )}
+      </article>
+
+      <article className="panel panel--markdown">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Markdown</p>
+            <h2>可复制 Review 内容</h2>
+          </div>
+          <button className="copy-button copy-button--secondary" type="button" onClick={handleCopyMarkdown}>
+            复制 Markdown
+          </button>
+        </div>
+        <pre className="markdown-preview">{markdown}</pre>
       </article>
 
       <article className="panel panel--recommendation">

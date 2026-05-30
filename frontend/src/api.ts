@@ -1,7 +1,9 @@
 import type { ReviewResult } from './types';
 
+const apiBaseUrl = import.meta.env.VITE_BACKEND_URL ?? '';
+
 export async function requestReview(prUrl: string): Promise<ReviewResult> {
-  const response = await fetch('/api/review', {
+  const response = await fetch(`${apiBaseUrl}/api/review`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
